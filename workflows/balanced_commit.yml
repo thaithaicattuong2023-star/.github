@@ -1,0 +1,33 @@
+name: Balanced Auto Commit
+
+on:
+  schedule:
+    # Chạy cứ mỗi 2 phút một lần
+    - cron: '*/2 * * * *'
+  workflow_dispatch: 
+
+jobs:
+  commit-job:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update Daily Log
+        run: |
+          # Ghi giờ giấc vào file để tạo sự thay đổi
+          echo "Update at: $(date +'%Y-%m-%d %H:%M:%S')" >> commit_log.txt
+          
+          # Giữ file log gọn nhẹ (30 dòng cuối)
+          tail -n 30 commit_log.txt > temp.txt && mv temp.txt commit_log.txt
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add commit_log.txt
+          git commit -m "chore: system sync $(date +'%H:%M')"
+          git push
